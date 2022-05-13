@@ -63,7 +63,6 @@ private:
   uint8_t _dataMode;
   void setChipSelect(int value);
   int8_t _cs, _sck, _mosi, _miso;
-  bool _begun;
 };
 
 #endif /* RTDUINO_USING_SPI */
