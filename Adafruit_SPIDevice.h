@@ -1,78 +1,32 @@
+/*
+ * Copyright (c) 2021-2022, RTduino Development Team
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * https://github.com/RTduino/RTduino
+ * https://gitee.com/rtduino/RTduino
+ *
+ * Change Logs:
+ * Date           Author       Notes
+ *            Adafruit Team    First version
+ * 2022-02-19     Meco Man     port to RTduino
+ */
+
 #ifndef Adafruit_SPIDevice_h
 #define Adafruit_SPIDevice_h
 
 #include <Arduino.h>
 
+#ifdef RTDUINO_USING_SPI
 #if !defined(SPI_INTERFACES_COUNT) ||                                          \
     (defined(SPI_INTERFACES_COUNT) && (SPI_INTERFACES_COUNT > 0))
 
 #include <SPI.h>
 
-// some modern SPI definitions don't have BitOrder enum
-#if (defined(__AVR__) && !defined(ARDUINO_ARCH_MEGAAVR)) ||                    \
-    defined(ESP8266) || defined(TEENSYDUINO) || defined(SPARK) ||              \
-    defined(ARDUINO_ARCH_SPRESENSE) || defined(MEGATINYCORE) ||                \
-    defined(DXCORE) || defined(ARDUINO_AVR_ATmega4809) ||                      \
-    defined(ARDUINO_AVR_ATmega4808) || defined(ARDUINO_AVR_ATmega3209) ||      \
-    defined(ARDUINO_AVR_ATmega3208) || defined(ARDUINO_AVR_ATmega1609) ||      \
-    defined(ARDUINO_AVR_ATmega1608) || defined(ARDUINO_AVR_ATmega809) ||       \
-    defined(ARDUINO_AVR_ATmega808) || defined(ARDUINO_ARCH_ARC32)
-
 typedef enum _BitOrder {
   SPI_BITORDER_MSBFIRST = MSBFIRST,
   SPI_BITORDER_LSBFIRST = LSBFIRST,
 } BusIOBitOrder;
-
-#elif defined(ESP32) || defined(__ASR6501__) || defined(__ASR6502__)
-
-// some modern SPI definitions don't have BitOrder enum and have different SPI
-// mode defines
-typedef enum _BitOrder {
-  SPI_BITORDER_MSBFIRST = SPI_MSBFIRST,
-  SPI_BITORDER_LSBFIRST = SPI_LSBFIRST,
-} BusIOBitOrder;
-
-#else
-// Some platforms have a BitOrder enum but its named MSBFIRST/LSBFIRST
-#define SPI_BITORDER_MSBFIRST MSBFIRST
-#define SPI_BITORDER_LSBFIRST LSBFIRST
-typedef BitOrder BusIOBitOrder;
-#endif
-
-#if defined(__IMXRT1062__) // Teensy 4.x
-// *Warning* I disabled the usage of FAST_PINIO as the set/clear operations
-// used in the cpp file are not atomic and can effect multiple IO pins
-// and if an interrupt happens in between the time the code reads the register
-//  and writes out the updated value, that changes one or more other IO pins
-// on that same IO port, those change will be clobbered when the updated
-// values are written back.  A fast version can be implemented that uses the
-// ports set and clear registers which are atomic.
-// typedef volatile uint32_t BusIO_PortReg;
-// typedef uint32_t BusIO_PortMask;
-//#define BUSIO_USE_FAST_PINIO
-
-#elif defined(__AVR__) || defined(TEENSYDUINO)
-typedef volatile uint8_t BusIO_PortReg;
-typedef uint8_t BusIO_PortMask;
-#define BUSIO_USE_FAST_PINIO
-
-#elif defined(ESP8266) || defined(ESP32) || defined(__SAM3X8E__) ||            \
-    defined(ARDUINO_ARCH_SAMD)
-typedef volatile uint32_t BusIO_PortReg;
-typedef uint32_t BusIO_PortMask;
-#define BUSIO_USE_FAST_PINIO
-
-#elif (defined(__arm__) || defined(ARDUINO_FEATHER52)) &&                      \
-    !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_RP2040)
-typedef volatile uint32_t BusIO_PortReg;
-typedef uint32_t BusIO_PortMask;
-#if !defined(__ASR6501__) && !defined(__ASR6502__)
-#define BUSIO_USE_FAST_PINIO
-#endif
-
-#else
-#undef BUSIO_USE_FAST_PINIO
-#endif
 
 /**! The class which defines how we will talk to this device over SPI **/
 class Adafruit_SPIDevice {
@@ -90,7 +44,7 @@ public:
   bool begin(void);
   bool read(uint8_t *buffer, size_t len, uint8_t sendvalue = 0xFF);
   bool write(const uint8_t *buffer, size_t len,
-             const uint8_t *prefix_buffer = nullptr, size_t prefix_len = 0);
+             const uint8_t *prefix_buffer = NULL, size_t prefix_len = 0);
   bool write_then_read(const uint8_t *write_buffer, size_t write_len,
                        uint8_t *read_buffer, size_t read_len,
                        uint8_t sendvalue = 0xFF);
@@ -120,4 +74,5 @@ private:
 };
 
 #endif // has SPI defined
+#endif /* RTDUINO_USING_SPI */
 #endif // Adafruit_SPIDevice_h

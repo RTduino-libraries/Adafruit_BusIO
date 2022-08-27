@@ -1,13 +1,28 @@
+/*
+ * Copyright (c) 2021-2022, RTduino Development Team
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * https://github.com/RTduino/RTduino
+ * https://gitee.com/rtduino/RTduino
+ *
+ * Change Logs:
+ * Date           Author       Notes
+ *            Adafruit Team    First version
+ * 2022-02-19     Meco Man     port to RTduino
+ */
+
 #ifndef Adafruit_BusIO_Register_h
 #define Adafruit_BusIO_Register_h
 
 #include <Arduino.h>
 
-#if !defined(SPI_INTERFACES_COUNT) ||                                          \
-    (defined(SPI_INTERFACES_COUNT) && (SPI_INTERFACES_COUNT > 0))
-
+#ifdef RTDUINO_USING_WIRE
 #include <Adafruit_I2CDevice.h>
+#endif /* RTDUINO_USING_WIRE */
+#ifdef RTDUINO_USING_SPI
 #include <Adafruit_SPIDevice.h>
+#endif /* RTDUINO_USING_SPI */
 
 typedef enum _Adafruit_BusIO_SPIRegType {
   ADDRBIT8_HIGH_TOREAD = 0,
@@ -42,10 +57,12 @@ typedef enum _Adafruit_BusIO_SPIRegType {
  */
 class Adafruit_BusIO_Register {
 public:
+#ifdef RTDUINO_USING_WIRE
   Adafruit_BusIO_Register(Adafruit_I2CDevice *i2cdevice, uint16_t reg_addr,
                           uint8_t width = 1, uint8_t byteorder = LSBFIRST,
                           uint8_t address_width = 1);
-
+#endif /* RTDUINO_USING_WIRE */
+#ifdef RTDUINO_USING_SPI
   Adafruit_BusIO_Register(Adafruit_SPIDevice *spidevice, uint16_t reg_addr,
                           Adafruit_BusIO_SPIRegType type, uint8_t width = 1,
                           uint8_t byteorder = LSBFIRST,
@@ -56,7 +73,7 @@ public:
                           Adafruit_BusIO_SPIRegType type, uint16_t reg_addr,
                           uint8_t width = 1, uint8_t byteorder = LSBFIRST,
                           uint8_t address_width = 1);
-
+#endif /* RTDUINO_USING_SPI */
   bool read(uint8_t *buffer, uint8_t len);
   bool read(uint8_t *value);
   bool read(uint16_t *value);
@@ -75,14 +92,17 @@ public:
   void println(Stream *s = &Serial);
 
 private:
+#ifdef RTDUINO_USING_WIRE
   Adafruit_I2CDevice *_i2cdevice;
+#endif /* RTDUINO_USING_WIRE */
+#ifdef RTDUINO_USING_SPI
   Adafruit_SPIDevice *_spidevice;
   Adafruit_BusIO_SPIRegType _spiregtype;
+#endif /* RTDUINO_USING_SPI */
   uint16_t _address;
   uint8_t _width, _addrwidth, _byteorder;
-  uint8_t _buffer[4]; // we won't support anything larger than uint32 for
-                      // non-buffered read
-  uint32_t _cached = 0;
+  uint8_t _buffer[4]; // we won't support anything larger than uint32 for non-buffered read
+  uint32_t _cached;
 };
 
 /*!
@@ -101,5 +121,4 @@ private:
   uint8_t _bits, _shift;
 };
 
-#endif // SPI exists
 #endif // BusIO_Register_h
