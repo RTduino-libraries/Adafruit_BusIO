@@ -11,8 +11,6 @@
 #include "Adafruit_SPIDevice.h"
 
 #ifdef RTDUINO_USING_SPI
-#if !defined(SPI_INTERFACES_COUNT) ||                                          \
-    (defined(SPI_INTERFACES_COUNT) && (SPI_INTERFACES_COUNT > 0))
 
 //#define DEBUG_SERIAL Serial
 
@@ -59,21 +57,6 @@ Adafruit_SPIDevice::Adafruit_SPIDevice(int8_t cspin, int8_t sckpin,
   _sck = sckpin;
   _miso = misopin;
   _mosi = mosipin;
-
-#ifdef BUSIO_USE_FAST_PINIO
-  csPort = (BusIO_PortReg *)portOutputRegister(digitalPinToPort(cspin));
-  csPinMask = digitalPinToBitMask(cspin);
-  if (mosipin != -1) {
-    mosiPort = (BusIO_PortReg *)portOutputRegister(digitalPinToPort(mosipin));
-    mosiPinMask = digitalPinToBitMask(mosipin);
-  }
-  if (misopin != -1) {
-    misoPort = (BusIO_PortReg *)portInputRegister(digitalPinToPort(misopin));
-    misoPinMask = digitalPinToBitMask(misopin);
-  }
-  clkPort = (BusIO_PortReg *)portOutputRegister(digitalPinToPort(sckpin));
-  clkPinMask = digitalPinToBitMask(sckpin);
-#endif
 
   _freq = freq;
   _dataOrder = dataOrder;
@@ -182,77 +165,39 @@ void Adafruit_SPIDevice::transfer(uint8_t *buffer, size_t len) {
       if (_dataMode == SPI_MODE0 || _dataMode == SPI_MODE2) {
         towrite = send & b;
         if ((_mosi != -1) && (lastmosi != towrite)) {
-#ifdef BUSIO_USE_FAST_PINIO
-          if (towrite)
-            *mosiPort |= mosiPinMask;
-          else
-            *mosiPort &= ~mosiPinMask;
-#else
           digitalWrite(_mosi, towrite);
-#endif
           lastmosi = towrite;
         }
 
-#ifdef BUSIO_USE_FAST_PINIO
-        *clkPort |= clkPinMask; // Clock high
-#else
         digitalWrite(_sck, HIGH);
-#endif
 
         if (bitdelay_us) {
           delayMicroseconds(bitdelay_us);
         }
 
         if (_miso != -1) {
-#ifdef BUSIO_USE_FAST_PINIO
-          if (*misoPort & misoPinMask) {
-#else
           if (digitalRead(_miso)) {
-#endif
             reply |= b;
           }
         }
 
-#ifdef BUSIO_USE_FAST_PINIO
-        *clkPort &= ~clkPinMask; // Clock low
-#else
         digitalWrite(_sck, LOW);
-#endif
       } else { // if (_dataMode == SPI_MODE1 || _dataMode == SPI_MODE3)
 
-#ifdef BUSIO_USE_FAST_PINIO
-        *clkPort |= clkPinMask; // Clock high
-#else
         digitalWrite(_sck, HIGH);
-#endif
 
         if (bitdelay_us) {
           delayMicroseconds(bitdelay_us);
         }
 
         if (_mosi != -1) {
-#ifdef BUSIO_USE_FAST_PINIO
-          if (send & b)
-            *mosiPort |= mosiPinMask;
-          else
-            *mosiPort &= ~mosiPinMask;
-#else
           digitalWrite(_mosi, send & b);
-#endif
         }
 
-#ifdef BUSIO_USE_FAST_PINIO
-        *clkPort &= ~clkPinMask; // Clock low
-#else
         digitalWrite(_sck, LOW);
-#endif
 
         if (_miso != -1) {
-#ifdef BUSIO_USE_FAST_PINIO
-          if (*misoPort & misoPinMask) {
-#else
           if (digitalRead(_miso)) {
-#endif
             reply |= b;
           }
         }
@@ -504,5 +449,4 @@ bool Adafruit_SPIDevice::write_and_read(uint8_t *buffer, size_t len) {
   return true;
 }
 
-#endif // SPI exists
 #endif /* RTDUINO_USING_SPI */

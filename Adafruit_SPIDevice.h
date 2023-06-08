@@ -14,8 +14,6 @@
 #include <Arduino.h>
 
 #ifdef RTDUINO_USING_SPI
-#if !defined(SPI_INTERFACES_COUNT) ||                                          \
-    (defined(SPI_INTERFACES_COUNT) && (SPI_INTERFACES_COUNT > 0))
 
 #include <SPI.h>
 
@@ -60,15 +58,9 @@ private:
   BusIOBitOrder _dataOrder;
   uint8_t _dataMode;
   void setChipSelect(int value);
-
   int8_t _cs, _sck, _mosi, _miso;
-#ifdef BUSIO_USE_FAST_PINIO
-  BusIO_PortReg *mosiPort, *clkPort, *misoPort, *csPort;
-  BusIO_PortMask mosiPinMask, misoPinMask, clkPinMask, csPinMask;
-#endif
   bool _begun;
 };
 
-#endif // has SPI defined
 #endif /* RTDUINO_USING_SPI */
 #endif // Adafruit_SPIDevice_h
