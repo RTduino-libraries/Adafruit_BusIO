@@ -119,17 +119,7 @@ bool Adafruit_SPIDevice::begin(void) {
  */
 void Adafruit_SPIDevice::transfer(uint8_t *buffer, size_t len) {
   if (_spi) {
-    // hardware SPI is easy
-
-#if defined(SPARK)
-    _spi->transfer(buffer, buffer, len, NULL);
-#elif defined(STM32)
-    for (size_t i = 0; i < len; i++) {
-      _spi->transfer(buffer[i]);
-    }
-#else
     _spi->transfer(buffer, len);
-#endif
     return;
   }
 
@@ -287,26 +277,9 @@ bool Adafruit_SPIDevice::write(const uint8_t *buffer, size_t len,
                                const uint8_t *prefix_buffer,
                                size_t prefix_len) {
   beginTransactionWithAssertingCS();
-
   // do the writing
-#if defined(ARDUINO_ARCH_ESP32)
-  if (_spi) {
-    if (prefix_len > 0) {
-      _spi->transferBytes(prefix_buffer, NULL, prefix_len);
-    }
-    if (len > 0) {
-      _spi->transferBytes(buffer, NULL, len);
-    }
-  } else
-#endif
-  {
-    for (size_t i = 0; i < prefix_len; i++) {
-      transfer(prefix_buffer[i]);
-    }
-    for (size_t i = 0; i < len; i++) {
-      transfer(buffer[i]);
-    }
-  }
+  transfer((uint8_t *)prefix_buffer, prefix_len);
+  transfer((uint8_t *)buffer, len);
   endTransactionWithDeassertingCS();
 
 #ifdef DEBUG_SERIAL
@@ -382,19 +355,9 @@ bool Adafruit_SPIDevice::write_then_read(const uint8_t *write_buffer,
                                          size_t write_len, uint8_t *read_buffer,
                                          size_t read_len, uint8_t sendvalue) {
   beginTransactionWithAssertingCS();
+
   // do the writing
-#if defined(ARDUINO_ARCH_ESP32)
-  if (_spi) {
-    if (write_len > 0) {
-      _spi->transferBytes(write_buffer, NULL, write_len);
-    }
-  } else
-#endif
-  {
-    for (size_t i = 0; i < write_len; i++) {
-      transfer(write_buffer[i]);
-    }
-  }
+  transfer((uint8_t *)write_buffer, write_len);
 
 #ifdef DEBUG_SERIAL
   DEBUG_SERIAL.print(F("\tSPIDevice Wrote: "));
@@ -410,9 +373,8 @@ bool Adafruit_SPIDevice::write_then_read(const uint8_t *write_buffer,
 #endif
 
   // do the reading
-  for (size_t i = 0; i < read_len; i++) {
-    read_buffer[i] = transfer(sendvalue);
-  }
+  rt_memset(read_buffer, sendvalue, read_len);
+  transfer(read_buffer, read_len);
 
 #ifdef DEBUG_SERIAL
   DEBUG_SERIAL.print(F("\tSPIDevice Read: "));
