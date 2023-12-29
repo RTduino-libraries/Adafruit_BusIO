@@ -29,6 +29,7 @@ class Adafruit_I2CDevice
         uint8_t _addr;
         bool _begun;
         struct rt_i2c_bus_device *_i2c_bus_dev;
+        size_t _maxBufferSize;
 
     public:
         Adafruit_I2CDevice(uint8_t addr, TwoWire *theWire = &Wire);
@@ -43,6 +44,10 @@ class Adafruit_I2CDevice
                              uint8_t *read_buffer, size_t read_len,
                              bool stop = false);
         bool setSpeed(uint32_t desiredclk);
+
+        /*!   @brief  How many bytes we can read in a transaction
+         *    @return The size of the Wire receive/transmit buffer */
+        size_t maxBufferSize() { return _maxBufferSize; }
 };
 
 #endif /* RTDUINO_USING_WIRE */
