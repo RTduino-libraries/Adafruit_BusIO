@@ -26,7 +26,7 @@ Adafruit_I2CDevice::Adafruit_I2CDevice(uint8_t addr, TwoWire *theWire)
     _addr = addr;
     _begun = false;
     _i2c_bus_dev = RT_NULL;
-    _maxBufferSize = 32;
+    _maxBufferSize = RT_UINT16_MAX;
 }
 
 /*!
