@@ -50,7 +50,7 @@ bool Adafruit_I2CDevice::begin(bool addr_detect)
     if(rst == true)
     {
         _begun = true;
-        _i2c_bus_dev = _wire->_i2c_bus_dev;
+        _i2c_bus_dev = _wire->getBusDevice();
         return true;
     }
     else
